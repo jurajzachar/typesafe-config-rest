@@ -14,8 +14,10 @@ import com.typesafe.config.ConfigFactory;
 
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
+import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.web.Route;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.BodyHandler;
@@ -58,11 +60,22 @@ public class TypesafeConfigHttpServerVerticle extends AbstractVerticle {
     Router router = Router.router(vertx);
     Router configRepoRouter = Router.router(vertx);
     loadAppConfig(pathToConfig);
+    Route route = configRepoRouter.route(HttpMethod.POST, "/reload");
+    route.handler(this::handleReload);
     configRepoRouter.routeWithRegex("\\/(.+)").handler(this::handleRoutingContext);
     router.mountSubRouter(rootCtx, configRepoRouter);
     router.route().handler(BodyHandler.create());
     vertx.createHttpServer(new HttpServerOptions().setHost(host).setPort(port)).requestHandler(router::accept).listen();
     startFuture.complete();
+  }
+
+  private void handleReload(RoutingContext routingContext) {
+    LOG.info("Reloading...");
+    String pathToConfig = context.config().getString(PATH_TO_CONFIG_CNFK);
+    loadAppConfig(pathToConfig);
+    routingContext.response().end(
+        toJson("reload", String.format("Config '%s' reloaded sucessfully at %s", pathToConfig, LocalDateTime.now()))
+            .encodePrettily());
   }
 
   private void handleRoutingContext(RoutingContext routingContext) {
@@ -73,19 +86,10 @@ public class TypesafeConfigHttpServerVerticle extends AbstractVerticle {
         relPath = relPath.substring(0, relPath.length() - 1);
       }
       final String requestArg = relPath.replace("/", ".");
-      if (RELOAD_CMD.equals(requestArg)) {
-        LOG.info("Reloading...");
-        String pathToConfig = context.config().getString(PATH_TO_CONFIG_CNFK);
-        loadAppConfig(pathToConfig);
-        routingContext.response()
-            .end(toJson(requestArg, String.format("Config '%s' reloaded at %s", pathToConfig, LocalDateTime.now()))
-                .encodePrettily());
-      } else {
-        final Object configValue = readAppConfig(requestArg);
-        final String payload = String.format("%s=%s", requestArg, configValue);
-        LOG.trace("Serving '{}' to client '{}'", payload, routingContext.request().host());
-        routingContext.response().end(toJson(requestArg, configValue).encodePrettily());
-      }
+      final Object configValue = readAppConfig(requestArg);
+      final String payload = String.format("%s=%s", requestArg, configValue);
+      LOG.trace("Serving '{}' to client '{}'", payload, routingContext.request().host());
+      routingContext.response().end(toJson(requestArg, configValue).encodePrettily());
     }
   }
 
