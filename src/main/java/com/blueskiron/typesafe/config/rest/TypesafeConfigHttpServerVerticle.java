@@ -40,7 +40,7 @@ public class TypesafeConfigHttpServerVerticle extends AbstractVerticle {
   private static final Logger LOG = LoggerFactory.getLogger(TypesafeConfigHttpServerVerticle.class);
 
   // volatile
-  private Config config;
+  private Future<Config> configFuture = Future.future();
 
   @Override
   public void start(Future<Void> startFuture) {
@@ -73,9 +73,14 @@ public class TypesafeConfigHttpServerVerticle extends AbstractVerticle {
     LOG.info("Reloading...");
     String pathToConfig = context.config().getString(PATH_TO_CONFIG_CNFK);
     loadAppConfig(pathToConfig);
+    if(configFuture.failed()){
+      routingContext.response().setStatusCode(500)
+      .end(String.format("Failed to reload Config '%s': %s", pathToConfig, configFuture.cause()));
+    } else {
     routingContext.response().end(
         toJson("reload", String.format("Config '%s' reloaded sucessfully at %s", pathToConfig, LocalDateTime.now()))
             .encodePrettily());
+    }
   }
 
   private void handleRoutingContext(RoutingContext routingContext) {
@@ -99,11 +104,11 @@ public class TypesafeConfigHttpServerVerticle extends AbstractVerticle {
 
   private Object readAppConfig(String configPath) {
     Object value = "null";
-    if (config == null) {
+    if (configFuture.failed() || !configFuture.isComplete()) {
       return null;
     } else {
       try {
-        value = config.getAnyRef(configPath);
+        value = configFuture.result().getAnyRef(configPath);
       } catch (ConfigException e) {
         // if no config value is found we return null;
       }
@@ -139,13 +144,22 @@ public class TypesafeConfigHttpServerVerticle extends AbstractVerticle {
   }
 
   private void loadAppConfig(String pathToConfig) {
+    if(configFuture.isComplete()){
+      configFuture = Future.future();
+    }
     File file = Paths.get(pathToConfig).toFile();
     if (!file.exists()) {
-      LOG.error("Cannot read Typesafe Config: '{}'", file);
-      config = ConfigFactory.empty();
+      String errorMsg = "Cannot read Typesafe Config: '" + file + "' File exists?";
+      LOG.error(errorMsg);
+      configFuture.fail(errorMsg);
     } else {
       LOG.info("Loading Typesafe Config: '{}'", pathToConfig);
-      config = ConfigFactory.parseFile(file);
+      try {
+        Config config = ConfigFactory.parseFile(file).resolve();
+        configFuture.complete(config);
+      } catch (Exception e) {
+        configFuture.fail("Failed to read Typesafe Config: " + e);
+      }
     }
   }
 }
