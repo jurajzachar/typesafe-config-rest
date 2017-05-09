@@ -9,30 +9,43 @@ Serving Typesafe Config as REST service.
 
 
 ## 1. Write your Typesafe Config
-Typesafe Config brings sanity application configuration. It's HOCON (Human Optimized Object Configuration Notation) and also supports plain JSON. For more information see [Typesafe Config project page](https://github.com/typesafehub/config).
+Typesafe Config brings sanity to application configuration. It's HOCON (Human Optimized Object Configuration Notation) and also supports plain JSON. For more information and overview of all features see [Typesafe Config project page](https://github.com/typesafehub/config).
 
-A sample config might look like this.
+A sample __application.conf__ might look like this:
 
     my.typesafe.config {
+    	include "westeros"
     	local {
-    		foo = 1
-    		bar = 2
+    		foo = ${my.typesafe.config.westeros.davos}
+    		bar = "123?>:<foo"
     	}
-    	westeros {
-    		jamie = lanister
-    		daenerys = targaryen
-    	}
+    }
+
+And referenced  __westeros.conf__:
+
+    westeros {
+    	jamie = lanister
+    	daenerys = targaryen
+    	theon = greyjoy
+    	tyrion = lannister
+    	areo = hotah
+    	davos = seaworth
+    	arianne = martell
     }
 
 ## 2. Deploy HTTP Server
 
-Deploy __TypesafeConfigHttpServerVerticle__. For more info on what is Vert.X and how to use it go [here](http://vertx.io/).
+You can embed __TypesafeConfigHttpServerVerticle__ in your Java code. For more info on what is Vert.X and how to use it go [here](http://vertx.io/).
 
     config.put(ROOT_CTX_CNFK, "test-config");
-    config.put(PATH_TO_CONFIG_CNFK, currentWorkDir + "/src/test/resources/application.conf");
+    config.put(PATH_TO_CONFIG_CNFK, "/path/to/my/application.conf");
     DeploymentOptions depOpts = new DeploymentOptions();
     depOpts.setConfig(config);
     vertx.deployVerticle(new TypesafeConfigHttpServerVerticle(), depOpts);
+
+Alternatively, you can run this service as standalone java process:
+
+      java -Dhost=myserver -Dport=8123 Dconfig=/path/to/my/application.conf -jar typesafe-config-rest-$version-jarWithDependencies.jar
 
 ## 3. GET my config!
 
@@ -47,11 +60,16 @@ Get the whole config.
           "config" : {
             "westeros" : {
               "jamie" : "lanister",
-              "daenerys" : "targaryen"
+              "davos" : "seaworth",
+              "theon" : "greyjoy",
+              "daenerys" : "targaryen",
+              "areo" : "hotah",
+              "arianne" : "martell",
+              "tyrion" : "lannister"
             },
             "local" : {
-              "bar" : 2,
-              "foo" : 1
+              "bar" : "123?><foo",
+              "foo" : "seaworth"
             }
           }
         }
@@ -60,14 +78,11 @@ Get the whole config.
 
 Or dig deeper.
 
-    curl -X GET localhost:8123/test-config/my/typesafe/config/local
+    curl -X GET localhost:8123/test-config/my/typesafe/config/westeros/tyrion
 
     {
-      "key" : "my.typesafe.config.local",
-      "value" : {
-        "bar" : 2,
-        "foo" : 1
-      }
+      "key" : "my.typesafe.config.westeros.tyrion",
+      "value" : "lannister"
     }
 
 ## 4. Update config and reload

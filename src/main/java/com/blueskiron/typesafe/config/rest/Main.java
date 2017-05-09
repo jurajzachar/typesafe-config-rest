@@ -3,10 +3,6 @@ package com.blueskiron.typesafe.config.rest;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import io.netty.util.internal.StringUtil;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
@@ -38,7 +34,7 @@ public class Main {
   public static void main(String[] args) {
     Vertx vertx = Vertx.vertx();
     String host = (String) getPropertyOrDefault(DHOST, "localhost");
-    int port = Integer.parseInt((String) getPropertyOrDefault(DPORT, 8080));
+    int port = Integer.parseInt((String) getPropertyOrDefault(DPORT, "8080"));
     String rootCtx = (String) getPropertyOrDefault(DROOT_CTX, "config");
     String configPath = (String) getPropertyOrDefault(DCONFIG, null);
     JsonObject serviceConfig = new JsonObject();
