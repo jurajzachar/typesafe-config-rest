@@ -16,11 +16,13 @@ import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServerOptions;
+import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Route;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.BodyHandler;
+import io.vertx.ext.web.handler.CorsHandler;
 
 /**
  * @author Juraj Zachar (juraj.zachar@gmail.com)
@@ -77,6 +79,7 @@ public class TypesafeConfigHttpServerVerticle extends AbstractVerticle {
       routingContext.response().setStatusCode(500)
       .end(String.format("Failed to reload Config '%s': %s", pathToConfig, configFuture.cause()));
     } else {
+    routingContext.response().headers().add("Access-Control-Allow-Origin", "*");
     routingContext.response().end(
         toJson("reload", String.format("Config '%s' reloaded sucessfully at %s", pathToConfig, LocalDateTime.now()))
             .encodePrettily());
@@ -94,10 +97,18 @@ public class TypesafeConfigHttpServerVerticle extends AbstractVerticle {
       final Object configValue = readAppConfig(requestArg);
       final String payload = String.format("%s=%s", requestArg, configValue);
       LOG.trace("Serving '{}' to client '{}'", payload, routingContext.request().host());
-      routingContext.response().end(toJson(requestArg, configValue).encodePrettily());
+      handleCORS(routingContext.response())
+      .end(toJson(requestArg, configValue).encodePrettily());
     }
   }
-
+  
+  private HttpServerResponse handleCORS(HttpServerResponse response){
+    response.headers()
+    .add("Content-Type", "application/json")
+    .add("Access-Control-Allow-Origin", "*");
+    return response;
+  }
+  
   private JsonObject toJson(String key, Object value) {
     return new JsonObject().put("key", key).put("value", value);
   }
