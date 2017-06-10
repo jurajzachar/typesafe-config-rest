@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.blueskiron</groupId>
   <artifactId>typesafe-config-rest</artifactId>
-  <version>1.0.0-SNAPSHOT</version>
+  <version>1.0.0</version>
   <description>Typesafe Config as a REST service</description>
 
   <properties>
@@ -45,23 +45,23 @@
       <version>${slf4j.version}</version>
     </dependency>
     <dependency>
-        <groupId>org.apache.logging.log4j</groupId>
-        <artifactId>log4j-api</artifactId>
-        <version>${log4j.version}</version>
-        <scope>test</scope>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.logging.log4j</groupId>
-        <artifactId>log4j-core</artifactId>
-        <version>${log4j.version}</version>
-        <scope>test</scope>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.logging.log4j</groupId>
-        <artifactId>log4j-slf4j-impl</artifactId>
-        <version>${log4j.version}</version>
-        <scope>test</scope>
-      </dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-api</artifactId>
+      <version>${log4j.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-core</artifactId>
+      <version>${log4j.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-slf4j-impl</artifactId>
+      <version>${log4j.version}</version>
+      <scope>test</scope>
+    </dependency>
     <dependency>
       <groupId>io.vertx</groupId>
       <artifactId>vertx-unit</artifactId>
@@ -108,9 +108,46 @@
             </configuration>
           </execution>
         </executions>
-      </plugin>
+        </plugin>
+        <plugin>
+          <artifactId>maven-jar-plugin</artifactId>
+          <version>2.4</version>
+          <executions>
+            <execution>
+              <id>default-jar</id>
+              <configuration>
+                <archive>
+                  <!-- Generate a jar INDEX.LIST -->
+                  <index>true</index>
+                  <!-- A manifest containing the OSGi metadata has been generated using the maven-bundle-plugin -->
+                  <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
+                  <!-- Add the Maven coordinates in the manifest -->
+                  <manifestEntries>
+                    <Maven-Group-Id>${project.groupId}</Maven-Group-Id>
+                    <Maven-Artifact-Id>${project.artifactId}</Maven-Artifact-Id>
+                    <Maven-Version>${project.version}</Maven-Version>
+                  </manifestEntries>
+                </archive>
+              </configuration>
+            </execution>
+          </executions>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.felix</groupId>
+          <artifactId>maven-bundle-plugin</artifactId>
+          <version>2.5.3</version>
+          <executions>
+            <execution>
+              <id>bundle-manifest</id>
+              <phase>process-classes</phase>
+              <goals>
+                <goal>manifest</goal>
+              </goals>
+            </execution>
+          </executions>
+        </plugin>
     </plugins>
   </build>
 
-  </project>
+</project>
 
