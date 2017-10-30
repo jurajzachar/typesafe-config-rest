@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/jurajzachar/typesafe-config-rest.svg?branch=master)](https://travis-ci.org/jurajzachar/typesafe-config-rest)
+
 # typesafe-config-rest
 Serving Typesafe Config as REST service.
 
