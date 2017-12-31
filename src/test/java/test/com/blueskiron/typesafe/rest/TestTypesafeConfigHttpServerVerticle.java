@@ -53,7 +53,7 @@ public class TestTypesafeConfigHttpServerVerticle {
         response.bodyHandler(buffer -> {
           String payload = buffer.toString(Charset.forName("UTF-8"));
           JsonObject jsonConfig = new JsonObject(payload);
-          LOG.info("Recieved: {}", jsonConfig.encodePrettily());
+          LOG.info("Received: {}", jsonConfig.encodePrettily());
           context.assertNotNull(jsonConfig.getValue("key"));
           context.assertNotNull(jsonConfig.getValue("value"));
           async.complete();

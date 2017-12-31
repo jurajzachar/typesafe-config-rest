@@ -18,9 +18,9 @@ A sample __application.conf__ might look like this:
     my.typesafe.config {
     	include "westeros"
     	local {
-    		foo = ${my.typesafe.config.westeros.davos}
-    		bar = "123?>:<foo"
-    	}
+			foo = ${my.typesafe.config.westeros.davos}
+			bar = "123?:#'`£$%^&*()_><foo"
+		}
     }
 
 And referenced  __westeros.conf__:
@@ -70,7 +70,7 @@ Get the whole config.
               "tyrion" : "lannister"
             },
             "local" : {
-              "bar" : "123?><foo",
+              "bar" : "123?:#'`£$%^&*()_><foo",
               "foo" : "seaworth"
             }
           }
