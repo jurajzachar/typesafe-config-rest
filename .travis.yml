@@ -8,4 +8,6 @@ notifications:
     recipients:
       - juraj.zachar@gmail.com
 
-script: mvn clean verify deploy
+script: mvn clean verify package
+
+#TODO how to deploy to public repo with travis + ssh key + no password input?
