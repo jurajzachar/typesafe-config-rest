@@ -11,12 +11,14 @@ import org.slf4j.LoggerFactory;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigFactory;
+import com.typesafe.config.ConfigRenderOptions;
 
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.http.HttpServerResponse;
+import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Route;
 import io.vertx.ext.web.Router;
@@ -63,6 +65,15 @@ public class TypesafeConfigHttpServerVerticle extends AbstractVerticle {
     loadAppConfig(pathToConfig);
     Route route = configRepoRouter.route(HttpMethod.POST, "/reload");
     route.handler(this::handleReload);
+    //return the whole encoded config when fetching root
+    configRepoRouter.get("/").handler(ctx -> {
+      if (configFuture.failed() || !configFuture.isComplete()) {
+        ctx.response().setStatusCode(500).end(Json.encodePrettily(configFuture.cause()));
+      } else {
+        ctx.response().setStatusCode(200).end(configFuture.result().root().render(ConfigRenderOptions.concise()));
+      }
+    });
+    //do dynamic route translation when fetching parts of the config
     configRepoRouter.routeWithRegex("\\/(.+)").handler(this::handleRoutingContext);
     router.mountSubRouter(rootCtx, configRepoRouter);
     router.route().handler(BodyHandler.create());
@@ -121,6 +132,7 @@ public class TypesafeConfigHttpServerVerticle extends AbstractVerticle {
         value = configFuture.result().getAnyRef(configPath);
       } catch (ConfigException e) {
         // if no config value is found we return null;
+        value = e.getMessage();
       }
     }
     return value;
@@ -135,15 +147,10 @@ public class TypesafeConfigHttpServerVerticle extends AbstractVerticle {
       port = 80;
     }
     if (rootCtx == null) {
-      startFuture.fail("Cannot start without '" + ROOT_CTX_CNFK + "' value!");
-      isValid = false;
-    }
-    if (!startFuture.failed() && rootCtx.isEmpty()) {
-      startFuture.fail("Cannot start without a valid '" + ROOT_CTX_CNFK + "' value!");
-      isValid = false;
+      rootCtx = "/";
     }
     if (!startFuture.failed() && pathToconfig == null) {
-      startFuture.fail("Cannot start without '" + ROOT_CTX_CNFK + "' value!");
+      startFuture.fail("Cannot start without '" + PATH_TO_CONFIG_CNFK + "' value!");
       isValid = false;
     }
     if (!startFuture.failed() && !Files.exists(Paths.get(pathToconfig))) {
