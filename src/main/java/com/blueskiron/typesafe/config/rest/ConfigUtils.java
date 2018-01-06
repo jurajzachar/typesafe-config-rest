@@ -131,4 +131,19 @@ public class ConfigUtils {
     return maybeConfigValue;
   }
   
+  /**
+   * @param config
+   * @param key
+   * @param fallbackValue
+   * @return
+   */
+  public static Object getValueOrDefault(Config config, String key, Object fallbackValue) {
+    if(config.hasPath(key)) {
+      return config.getAnyRef(key);
+    } else {
+      LOG.warn("Requested config path: '{}', using default value: '{}'", key, fallbackValue);
+      return fallbackValue;
+    }
+  }
+      
 }

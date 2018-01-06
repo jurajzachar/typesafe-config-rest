@@ -48,12 +48,25 @@ public class TypesafeConfigHttpServerVerticle extends AbstractVerticle {
   @Override
   public void start(Future<Void> startFuture) {
     JsonObject myConfig = context.config();
-    String host = myConfig.getString(HOST_CNFK);
-    int port = myConfig.getInteger(PORT_CNFK);
-    String rootCtx = myConfig.getString(ROOT_CTX_CNFK);
+    if(!myConfig.containsKey(PATH_TO_CONFIG_CNFK)) {
+      startFuture.fail("Missing '" + PATH_TO_CONFIG_CNFK + "' config parameter. Cannot start without file path to Config");
+      return;
+    }
     String pathToConfig = myConfig.getString(PATH_TO_CONFIG_CNFK);
-    
-    // Path must start with /
+    LOG.info("Using path to Typesafe Config: ", pathToConfig);
+    String host = "localhost";
+    if(myConfig.containsKey(HOST_CNFK)) {
+      host = myConfig.getString(HOST_CNFK);
+    }
+    int port = 8080;
+    if(myConfig.containsKey(PORT_CNFK)) {
+      port = myConfig.getInteger(PORT_CNFK);
+    }
+    String rootCtx = "config";
+    if (myConfig.containsKey(ROOT_CTX_CNFK)) {
+      rootCtx = myConfig.getString(ROOT_CTX_CNFK);
+    }
+    // context root must start with a '/' character otherwise router throws an error.
     if (rootCtx.charAt(0) != '/') {
       rootCtx = "/" + rootCtx;
     }
@@ -80,7 +93,8 @@ public class TypesafeConfigHttpServerVerticle extends AbstractVerticle {
     vertx.createHttpServer(new HttpServerOptions().setHost(host).setPort(port)).requestHandler(router::accept).listen();
     startFuture.complete();
   }
-
+  
+  
   private void handleReload(RoutingContext routingContext) {
     LOG.info("Reloading...");
     String pathToConfig = context.config().getString(PATH_TO_CONFIG_CNFK);
