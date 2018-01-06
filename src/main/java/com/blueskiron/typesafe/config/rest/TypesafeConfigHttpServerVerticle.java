@@ -52,7 +52,7 @@ public class TypesafeConfigHttpServerVerticle extends AbstractVerticle {
     int port = myConfig.getInteger(PORT_CNFK);
     String rootCtx = myConfig.getString(ROOT_CTX_CNFK);
     String pathToConfig = myConfig.getString(PATH_TO_CONFIG_CNFK);
-
+    
     // Path must start with /
     if (rootCtx.charAt(0) != '/') {
       rootCtx = "/" + rootCtx;

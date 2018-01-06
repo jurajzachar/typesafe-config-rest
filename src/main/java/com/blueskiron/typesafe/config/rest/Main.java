@@ -3,11 +3,17 @@ package com.blueskiron.typesafe.config.rest;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 
 public class Main {
+  
+  private static final Logger LOG = LoggerFactory.getLogger(Main.class);
+
   private static final String DHOST = "host";
   private static final String DPORT = "port";
   private static final String DROOT_CTX = "rootContext";
@@ -25,7 +31,7 @@ public class Main {
   private static Object getPropertyOrDefault(String key, Object fallBack) {
     Object value = System.getProperties().get(key);
     if (value == null) {
-     System.out.println("No " + key + " parameter provided, using default = " + fallBack);
+     LOG.error("No {} parameter provided, using default: ", key, fallBack);
       value = fallBack;
     }
     return value;
@@ -42,7 +48,7 @@ public class Main {
     serviceConfig.put(PARAMS_MAPPING.get(DPORT), port);
     serviceConfig.put(PARAMS_MAPPING.get(DROOT_CTX), rootCtx);
     serviceConfig.put(PARAMS_MAPPING.get(DCONFIG), configPath);
-    System.out.println("Using serviceConfig = " + serviceConfig.encodePrettily());
+    LOG.info("Using start up parameters: {}", serviceConfig.encodePrettily());
     DeploymentOptions depOpts = new DeploymentOptions().setConfig(serviceConfig);
     vertx.deployVerticle(new TypesafeConfigHttpServerVerticle(), depOpts);
   }
