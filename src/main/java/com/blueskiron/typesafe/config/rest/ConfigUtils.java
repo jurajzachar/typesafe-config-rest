@@ -67,7 +67,7 @@ public class ConfigUtils {
    * @throws IllegalArgumentException
    */
   public static <T> T readTypeValue(Config config, Class<T> type) throws IllegalArgumentException {
-    String key= type.getClass().getName();
+    String key= type.getName();
     try {
       String raw = config.getValue(key).render(CONFIG_RENDER_OPTS);
       return Json.decodeValue(raw, type);
@@ -84,7 +84,7 @@ public class ConfigUtils {
    * @throws IllegalArgumentException
    */
   public static <T> T readTypeValue(Config config, Class<T> type, BiFunction<String,Class<T>,T> deserializer) throws IllegalArgumentException {
-    String key= type.getClass().getName();
+    String key= type.getName();
     try {
       String raw = config.getValue(key).render(CONFIG_RENDER_OPTS);
       return deserializer.apply(raw, type);
