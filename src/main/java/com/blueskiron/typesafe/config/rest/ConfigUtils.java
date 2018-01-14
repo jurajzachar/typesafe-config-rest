@@ -13,6 +13,7 @@ import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigRenderOptions;
 import com.typesafe.config.ConfigValue;
 
+import io.netty.util.internal.StringUtil;
 import io.vertx.core.VertxOptions;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
@@ -99,17 +100,15 @@ public class ConfigUtils {
    * @return
    */
   public static Optional<JsonObject> readJsonObjectValue(Config config, String key) {
-    Optional<JsonObject> maybeConfigValue = Optional.empty();
     try {
       ConfigValue value = config.getValue(key);
       String raw = value.render(CONFIG_RENDER_OPTS);
-      JsonObject jsonObj = new JsonObject(raw);
-      maybeConfigValue = Optional.of(jsonObj);
+      return StringUtil.isNullOrEmpty(raw) ? Optional.empty() : Optional.of(new JsonObject(raw));
     } catch (Exception e) {
       //ignore
       LOG.error("Failed to read value for key '{}'", key, e);
+      return Optional.empty();
     }
-    return maybeConfigValue;
   }
   
   /**
@@ -118,17 +117,15 @@ public class ConfigUtils {
    * @return
    */
   public static Optional<JsonArray> readJsonArrayValue(Config config, String key) {
-    Optional<JsonArray> maybeConfigValue = Optional.empty();
     try {
       ConfigValue value = config.getValue(key);
       String raw = value.render(CONFIG_RENDER_OPTS);
-      JsonArray jsonArray = new JsonArray(raw);
-      maybeConfigValue = Optional.of(jsonArray);
+      return StringUtil.isNullOrEmpty(raw) ? Optional.empty() : Optional.of(new JsonArray(raw));
     } catch (Exception e) {
       //ignore
       LOG.error("Failed to read value for key '{}'", key, e);
+      return Optional.empty();
     }
-    return maybeConfigValue;
   }
   
   /**
