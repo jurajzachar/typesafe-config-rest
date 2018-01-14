@@ -1,6 +1,7 @@
 package test.com.blueskiron.typesafe.rest;
 
 import java.nio.charset.Charset;
+import java.nio.file.Paths;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -22,12 +23,12 @@ import io.vertx.ext.unit.junit.VertxUnitRunner;
 public class TestTypesafeConfigHttpServerVerticle {
 
   private static final Logger LOG = LoggerFactory.getLogger(TestTypesafeConfigHttpServerVerticle.class);
-
+  private final String  pathToTestConfig = Paths.get("target", "test-classes", "application.conf").toAbsolutePath().toString();
   private final String rootContext = "test-config";
   private final String host = "localhost";
   private final int port = 8123;
   private Vertx vertx;
-
+  
   @Before
   public void init() {
     vertx = Vertx.vertx();
@@ -40,7 +41,7 @@ public class TestTypesafeConfigHttpServerVerticle {
     config.put(TypesafeConfigHttpServerVerticle.HOST_CNFK, host);
     config.put(TypesafeConfigHttpServerVerticle.PORT_CNFK, port);
     config.put(TypesafeConfigHttpServerVerticle.ROOT_CTX_CNFK, rootContext);
-    config.put(TypesafeConfigHttpServerVerticle.PATH_TO_CONFIG_CNFK, "target/test-classes/application.conf");
+    config.put(TypesafeConfigHttpServerVerticle.PATH_TO_CONFIG_CNFK, pathToTestConfig);
     DeploymentOptions depOpts = new DeploymentOptions();
     depOpts.setConfig(config);
     vertx.deployVerticle(new TypesafeConfigHttpServerVerticle(), depOpts, whenDone -> {
